@@ -51,57 +51,47 @@ echo "[info] VPN_CLIENT defined as '${VPN_CLIENT}'" | ts '%Y-%m-%d %H:%M:%.S'
 export VPN_PROV="custom"
 echo "[info] VPN_PROV defined as '${VPN_PROV}'" | ts '%Y-%m-%d %H:%M:%.S'
 
-if [[ "${VPN_CLIENT}" == "wireguard" ]]; then
+# create directory to store wireguard config files
+mkdir -p /config/wireguard
 
-	# create directory to store wireguard config files
-	mkdir -p /config/wireguard
-	
-	# set perms and owner for files in /config/wireguard directory
-	set +e
-	chown -R "${PUID}":"${PGID}" "/config/wireguard" &> /dev/null
-	exit_code_chown=$?
-	chmod -R 775 "/config/wireguard" &> /dev/null
-	set -e
-	
-	# force removal of mac os resource fork files in wireguard folder
-	rm -rf /config/wireguard/._*.conf
-	
-	# wildcard search for wireguard config files (match on first result)
-	vpn_config_path=$(find /config/wireguard -maxdepth 1 -name "*.conf" -print -quit)
-	
-	if [[ -z "${vpn_config_path}" ]]; then
-		# if conf file not found in /config/wireguard
-		echo "[crit] No WireGuard config file located in /config/wireguard/ (conf extension), please download from your VPN provider and then restart this container, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
-	
-	else
-		# rename wireguard config file to prevent issues with spaces and other illegal characters for device
-		export VPN_CONFIG="/config/wireguard/wg0.conf"
-		if [[ $(basename "${vpn_config_path}") != wg0.conf ]]; then
-			mv "${vpn_config_path}" "${VPN_CONFIG}"
-		fi
-		echo "[info] WireGuard config file (conf extension) is located at ${VPN_CONFIG}" | ts '%Y-%m-%d %H:%M:%.S'
-	
-	
-		# get endpoint line from wireguard config file
-		export VPN_REMOTE_SERVER=$(grep -P -o '(?<=^Endpoint\s=\s)[^:]+' "${VPN_CONFIG}" || true)
-		if [[ -z "${VPN_REMOTE_SERVER}" ]]; then
-			echo "[crit] VPN configuration file ${VPN_CONFIG} does not contain 'Endpoint' line, showing contents of file before exit..." | ts '%Y-%m-%d %H:%M:%.S'
-			cat "${VPN_CONFIG}" && exit 1
-		else
-			echo "[info] VPN_REMOTE_SERVER defined as '${VPN_REMOTE_SERVER}'" | ts '%Y-%m-%d %H:%M:%.S'
-		fi
-	
-	
-		export VPN_REMOTE_PORT=$(cat "${VPN_CONFIG}" | grep -P -o '(?<=^Endpoint\s=\s).*' | grep -P -o '[\d]+$' || true)
-		if [[ -z "${VPN_REMOTE_PORT}" ]]; then
-			echo "[crit] VPN configuration file ${VPN_CONFIG} does not contain port on 'Endpoint' line, showing contents of file before exit..." | ts '%Y-%m-%d %H:%M:%.S'
-			cat "${VPN_CONFIG}" && exit 1
-		fi
-	
-	fi
+# set perms and owner for files in /config/wireguard directory
+set +e
+chown -R "${PUID}":"${PGID}" "/config/wireguard" &> /dev/null
+exit_code_chown=$?
+chmod -R 775 "/config/wireguard" &> /dev/null
+set -e
+
+# force removal of mac os resource fork files in wireguard folder
+rm -rf /config/wireguard/._*.conf
+
+# wildcard search for wireguard config files (match on first result)
+vpn_config_path=$(find /config/wireguard -maxdepth 1 -name "*.conf" -print -quit)
+
+if [[ -z "${vpn_config_path}" ]]; then
+	# if conf file not found in /config/wireguard
+	echo "[crit] No WireGuard config file located in /config/wireguard/ (conf extension), please download from your VPN provider and then restart this container, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
 fi
 
+# rename wireguard config file to prevent issues with spaces and other illegal characters for device
+export VPN_CONFIG="/config/wireguard/wg0.conf"
+if [[ $(basename "${vpn_config_path}") != wg0.conf ]]; then
+	mv "${vpn_config_path}" "${VPN_CONFIG}"
+fi
+echo "[info] WireGuard config file (conf extension) is located at ${VPN_CONFIG}" | ts '%Y-%m-%d %H:%M:%.S'
 
+# get endpoint line from wireguard config file
+export VPN_REMOTE_SERVER=$(grep -P -o '(?<=^Endpoint\s=\s)[^:]+' "${VPN_CONFIG}" || true)
+if [[ -z "${VPN_REMOTE_SERVER}" ]]; then
+	echo "[crit] VPN configuration file ${VPN_CONFIG} does not contain 'Endpoint' line, showing contents of file before exit..." | ts '%Y-%m-%d %H:%M:%.S'
+	cat "${VPN_CONFIG}" && exit 1
+fi
+echo "[info] VPN_REMOTE_SERVER defined as '${VPN_REMOTE_SERVER}'" | ts '%Y-%m-%d %H:%M:%.S'
+
+export VPN_REMOTE_PORT=$(cat "${VPN_CONFIG}" | grep -P -o '(?<=^Endpoint\s=\s).*' | grep -P -o '[\d]+$' || true)
+if [[ -z "${VPN_REMOTE_PORT}" ]]; then
+	echo "[crit] VPN configuration file ${VPN_CONFIG} does not contain port on 'Endpoint' line, showing contents of file before exit..." | ts '%Y-%m-%d %H:%M:%.S'
+	cat "${VPN_CONFIG}" && exit 1
+fi
 echo "[info] VPN_REMOTE_PORT defined as '${VPN_REMOTE_PORT}'" | ts '%Y-%m-%d %H:%M:%.S'
 
 # device type (derived from the wireguard config filename without the file extesion) will always be wg0 as we forceably rename the file
@@ -112,13 +102,11 @@ export VPN_DEVICE_TYPE="wg0"
 echo "[info] VPN_REMOTE_PROTOCOL defined as 'udp'" | ts '%Y-%m-%d %H:%M:%.S'
 export VPN_REMOTE_PROTOCOL="udp"
 
-
 export LAN_NETWORK=$(echo "${LAN_NETWORK}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
-if [[ ! -z "${LAN_NETWORK}" ]]; then
-	echo "[info] LAN_NETWORK defined as '${LAN_NETWORK}'" | ts '%Y-%m-%d %H:%M:%.S'
-else
+if [[ -z "${LAN_NETWORK}" ]]; then
 	echo "[crit] LAN_NETWORK not defined (via -e LAN_NETWORK), exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
 fi
+echo "[info] LAN_NETWORK defined as '${LAN_NETWORK}'" | ts '%Y-%m-%d %H:%M:%.S'
 
 export NAME_SERVERS=$(echo "${NAME_SERVERS}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 if [[ ! -z "${NAME_SERVERS}" ]]; then
@@ -142,20 +130,14 @@ else
 	echo "[warn] VPN_PASS not defined (via -e VPN_PASS), assuming authentication via other method" | ts '%Y-%m-%d %H:%M:%.S'
 fi
 
-
-export ENABLE_PRIVOXY=$(echo "${ENABLE_PRIVOXY}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
-if [[ ! -z "${ENABLE_PRIVOXY}" ]]; then
-	echo "[info] ENABLE_PRIVOXY defined as '${ENABLE_PRIVOXY}'" | ts '%Y-%m-%d %H:%M:%.S'
-else
-	echo "[warn] ENABLE_PRIVOXY not defined (via -e ENABLE_PRIVOXY), defaulting to 'no'" | ts '%Y-%m-%d %H:%M:%.S'
-	export ENABLE_PRIVOXY="no"
-fi
+export ENABLE_PRIVOXY="yes"
+echo "[info] ENABLE_PRIVOXY defined as '${ENABLE_PRIVOXY}'" | ts '%Y-%m-%d %H:%M:%.S'
 
 export ADDITIONAL_PORTS=$(echo "${ADDITIONAL_PORTS}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 if [[ ! -z "${ADDITIONAL_PORTS}" ]]; then
-		echo "[info] ADDITIONAL_PORTS defined as '${ADDITIONAL_PORTS}'" | ts '%Y-%m-%d %H:%M:%.S'
+	echo "[info] ADDITIONAL_PORTS defined as '${ADDITIONAL_PORTS}'" | ts '%Y-%m-%d %H:%M:%.S'
 else
-		echo "[info] ADDITIONAL_PORTS not defined (via -e ADDITIONAL_PORTS), skipping allow for custom incoming ports" | ts '%Y-%m-%d %H:%M:%.S'
+	echo "[info] ADDITIONAL_PORTS not defined (via -e ADDITIONAL_PORTS), skipping allow for custom incoming ports" | ts '%Y-%m-%d %H:%M:%.S'
 fi
 
 EOF

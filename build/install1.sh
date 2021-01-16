@@ -42,9 +42,4 @@ passwd -d root
 chsh -s /bin/bash nobody
  
 ## additional cleanup for base only
-#rm -rf /root/* \
-#/usr/lib/firmware \
-#/usr/lib/modules \
-#/.dockerenv \
-#/.dockerinit \
-#/usr/share/info/*
+
