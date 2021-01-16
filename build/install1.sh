@@ -11,8 +11,11 @@ echo "nameserver 1.0.0.1" >> '/etc/resolv.conf' || true
 # force apk update
 apk update
 
+#base_apk_packages="gawk sed grep gzip supervisor nano vim ldns moreutils net-tools unzip unrar htop jq openssl shadow tini drill curl"
+base_apk_packages="gawk sed grep gzip supervisor ldns moreutils net-tools unzip unrar htop jq openssl shadow tini drill curl"
+
 echo "[info] Install base group and additional packages..."
-apk add --no-cache gawk sed grep gzip supervisor nano vim ldns moreutils net-tools dos2unix unzip unrar htop jq openssl shadow tini drill curl
+apk add --no-cache $base_apk_packages
 
 #echo "[info] set locale..."
 #echo en_US.UTF-8 UTF-8 > '/etc/locale.gen'
