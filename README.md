@@ -1,6 +1,6 @@
 **Description**
 
-This is a port of [binhex](https://github.com/binhex/) work (specifically arch-base, arch-int-vpn and arch-deluge) to Alpine Linux, removing the work to setup the Deluge torrent client and leaving only the Wireguard option.
+This is a port of [binhex](https://github.com/binhex/) work (specifically arch-base, arch-int-vpn) to Alpine Linux, removing the work to setup openvpn and leaving only the Wireguard option.
 
 **Build notes**
 

@@ -27,7 +27,7 @@ if [[ "${ENABLE_PRIVOXY}" == "yes" ]]; then
 		retry_wait=1
 		while true; do
 
-			if ! pgrep "privoxy" > /dev/null; then
+			if ! pgrep -x "privoxy" > /dev/null; then
 
 				retry_count=$((retry_count-1))
 				if [ "${retry_count}" -eq "0" ]; then

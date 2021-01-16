@@ -27,7 +27,7 @@ while true; do
 		if [[ "${ENABLE_PRIVOXY}" == "yes" ]]; then
 
 			# check if privoxy is running, if not then skip shutdown of process
-			if ! pgrep -fa "/usr/sbin/privoxy" > /dev/null; then
+			if ! pgrep -x "/usr/sbin/privoxy" > /dev/null; then
 
 				echo "[info] Privoxy not running"
 

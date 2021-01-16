@@ -51,7 +51,7 @@ VOLUME /data
 EXPOSE 8118
 
 # run tini to manage graceful exit and zombie reaping
-ENTRYPOINT ["/sbin/tini", "--"]
+ENTRYPOINT ["/sbin/tini", "-g", "--"]
 
 # run script to set uid, gid and permissions
 CMD ["/bin/bash", "/usr/local/bin/init.sh"]
