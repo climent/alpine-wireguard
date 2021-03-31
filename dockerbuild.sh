@@ -5,5 +5,5 @@ VERSION=`head -n 1 Dockerfile | awk 'BEGIN{FS=":"}{print $2}'`
 #LOCALVERSION=$(( $SUBVERSION + 1))`
 
 
-sudo docker build --tag alpine-wireguard:$VERSION.0 .
+docker build --tag alpine-wireguard:$VERSION.0 .
 
