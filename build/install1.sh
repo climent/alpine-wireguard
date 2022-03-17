@@ -12,7 +12,7 @@ echo "nameserver 1.0.0.1" >> '/etc/resolv.conf' || true
 apk update
 
 #base_apk_packages="gawk sed grep gzip supervisor nano vim ldns moreutils net-tools unzip unrar htop jq openssl shadow tini drill curl"
-base_apk_packages="gawk sed grep gzip supervisor ldns moreutils net-tools unzip unrar htop jq openssl shadow tini drill curl"
+base_apk_packages="gawk sed grep gzip supervisor ldns moreutils net-tools unzip htop jq openssl shadow tini drill curl"
 
 echo "[info] Install base group and additional packages..."
 apk add --no-cache $base_apk_packages
